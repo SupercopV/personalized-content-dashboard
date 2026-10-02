@@ -144,8 +144,8 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
             </Link>
           </div>
 
-          <div className="flex flex-wrap gap-1.5 px-2">
-            {selectedCategories.map((cat) => (
+          <div className="flex flex-wrap gap-1.5 px-2" suppressHydrationWarning>
+            {(isMounted ? selectedCategories : ["technology", "business", "entertainment", "science"]).map((cat) => (
               <span
                 key={cat}
                 className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600 capitalize dark:bg-slate-800/70 dark:text-slate-300"

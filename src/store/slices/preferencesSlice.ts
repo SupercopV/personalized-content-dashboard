@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { ContentCategory, UserPreferences } from "@/types/content";
 
-const PREFERENCES_STORAGE_KEY = "dashboard_preferences_v1";
+export const PREFERENCES_STORAGE_KEY = "dashboard_preferences_v1";
 
 const ALL_CATEGORIES: ContentCategory[] = [
   "technology",
@@ -20,32 +20,33 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   isDemoMode: true,
 };
 
-const loadInitialPreferences = (): UserPreferences => {
-  if (typeof window === "undefined") return DEFAULT_PREFERENCES;
-  try {
-    const saved = localStorage.getItem(PREFERENCES_STORAGE_KEY);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      return {
-        ...DEFAULT_PREFERENCES,
-        ...parsed,
-        categories: Array.isArray(parsed.categories) && parsed.categories.length > 0
-          ? parsed.categories
-          : DEFAULT_PREFERENCES.categories,
-      };
-    }
-  } catch {
-    // ignore json error
-  }
-  return DEFAULT_PREFERENCES;
-};
-
-const initialState: UserPreferences = loadInitialPreferences();
+const initialState: UserPreferences = DEFAULT_PREFERENCES;
 
 const preferencesSlice = createSlice({
   name: "preferences",
   initialState,
   reducers: {
+    hydratePreferences: (
+      state,
+      action: PayloadAction<Partial<UserPreferences>>
+    ) => {
+      if (
+        action.payload.categories &&
+        Array.isArray(action.payload.categories) &&
+        action.payload.categories.length > 0
+      ) {
+        state.categories = action.payload.categories;
+      }
+      if (action.payload.theme) {
+        state.theme = action.payload.theme;
+      }
+      if (action.payload.sortBy) {
+        state.sortBy = action.payload.sortBy;
+      }
+      if (action.payload.userName) {
+        state.userName = action.payload.userName;
+      }
+    },
     setCategories: (state, action: PayloadAction<ContentCategory[]>) => {
       state.categories = action.payload;
       if (typeof window !== "undefined") {
@@ -110,7 +111,10 @@ const preferencesSlice = createSlice({
       state.userName = DEFAULT_PREFERENCES.userName;
       if (typeof window !== "undefined") {
         try {
-          localStorage.setItem(PREFERENCES_STORAGE_KEY, JSON.stringify(DEFAULT_PREFERENCES));
+          localStorage.setItem(
+            PREFERENCES_STORAGE_KEY,
+            JSON.stringify(DEFAULT_PREFERENCES)
+          );
         } catch {
           // ignore
         }
@@ -120,6 +124,7 @@ const preferencesSlice = createSlice({
 });
 
 export const {
+  hydratePreferences,
   setCategories,
   toggleCategory,
   setTheme,

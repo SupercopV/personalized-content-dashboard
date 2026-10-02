@@ -1,33 +1,24 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-const FEED_ORDER_STORAGE_KEY = "dashboard_feed_order_v1";
+export const FEED_ORDER_STORAGE_KEY = "dashboard_feed_order_v1";
 
 interface FeedOrderState {
   customOrder: string[]; // List of card IDs in user's preferred order
 }
 
-const loadInitialOrder = (): string[] => {
-  if (typeof window === "undefined") return [];
-  try {
-    const saved = localStorage.getItem(FEED_ORDER_STORAGE_KEY);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      if (Array.isArray(parsed)) return parsed;
-    }
-  } catch {
-    // ignore
-  }
-  return [];
-};
-
 const initialState: FeedOrderState = {
-  customOrder: loadInitialOrder(),
+  customOrder: [],
 };
 
 const feedOrderSlice = createSlice({
   name: "feedOrder",
   initialState,
   reducers: {
+    hydrateFeedOrder: (state, action: PayloadAction<string[]>) => {
+      if (Array.isArray(action.payload)) {
+        state.customOrder = action.payload;
+      }
+    },
     setFeedOrder: (state, action: PayloadAction<string[]>) => {
       state.customOrder = action.payload;
       if (typeof window !== "undefined") {
@@ -73,7 +64,7 @@ const feedOrderSlice = createSlice({
   },
 });
 
-export const { setFeedOrder, moveFeedItem, resetFeedOrder } =
+export const { hydrateFeedOrder, setFeedOrder, moveFeedItem, resetFeedOrder } =
   feedOrderSlice.actions;
 
 export default feedOrderSlice.reducer;
