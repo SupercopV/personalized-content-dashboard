@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -16,6 +17,8 @@ import { ContentItem } from "@/types/content";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { toggleFavorite } from "@/store/slices/favoritesSlice";
 
+import { useIsMounted } from "@/hooks/useIsMounted";
+
 interface ContentModalProps {
   item: ContentItem | null;
   isOpen: boolean;
@@ -30,8 +33,26 @@ export default function ContentModal({ item, isOpen, onClose }: ContentModalProp
     { id: string; username: string; text: string; time: string }[]
   >([]);
   const [copied, setCopied] = useState(false);
+  const isMounted = useIsMounted();
 
-  if (!item) return null;
+  // Lock body scroll and handle Escape key when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "Escape") onClose();
+      };
+      window.addEventListener("keydown", handleKeyDown);
+      return () => {
+        document.body.style.overflow = "";
+        window.removeEventListener("keydown", handleKeyDown);
+      };
+    } else {
+      document.body.style.overflow = "";
+    }
+  }, [isOpen, onClose]);
+
+  if (!isMounted || !item) return null;
 
   const isFavorited = favorites.some((f) => f.id === item.id);
 
@@ -81,20 +102,20 @@ export default function ContentModal({ item, isOpen, onClose }: ContentModalProp
   const isSocial = item.type === "social";
   const isNews = item.type === "news";
 
-  return (
+  const modalContent = (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/70 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/80 backdrop-blur-md"
           />
 
-          {/* Modal Card */}
+          {/* Modal Dialog Card */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 15 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -249,7 +270,7 @@ export default function ContentModal({ item, isOpen, onClose }: ContentModalProp
                   href={item.ctaLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-medium text-white shadow-sm hover:bg-indigo-500 transition active:scale-95"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-indigo-500 transition active:scale-95"
                 >
                   <span>Original Article</span>
                   <ExternalLink className="h-3.5 w-3.5" />
@@ -260,7 +281,7 @@ export default function ContentModal({ item, isOpen, onClose }: ContentModalProp
                 <button
                   type="button"
                   onClick={onClose}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-medium text-white shadow-sm hover:bg-indigo-500 transition active:scale-95"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-indigo-500 transition active:scale-95"
                 >
                   Done
                 </button>
@@ -271,4 +292,6 @@ export default function ContentModal({ item, isOpen, onClose }: ContentModalProp
       )}
     </AnimatePresence>
   );
+
+  return createPortal(modalContent, document.body);
 }

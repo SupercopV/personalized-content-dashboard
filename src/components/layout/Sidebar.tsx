@@ -15,6 +15,7 @@ import {
   Radio,
 } from "lucide-react";
 import { useAppSelector } from "@/store";
+import { useIsMounted } from "@/hooks/useIsMounted";
 
 interface SidebarProps {
   isOpen?: boolean;
@@ -23,6 +24,8 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname();
+  const isMounted = useIsMounted();
+
   const favoritesCount = useAppSelector((state) => state.favorites.items.length);
   const selectedCategories = useAppSelector(
     (state) => state.preferences.categories
@@ -48,7 +51,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
       label: "Favorites",
       href: "/favorites",
       icon: Heart,
-      badge: favoritesCount > 0 ? favoritesCount : undefined,
+      badge: isMounted && favoritesCount > 0 ? favoritesCount : undefined,
     },
     {
       label: "Settings",

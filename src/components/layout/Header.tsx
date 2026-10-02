@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useIsMounted } from "@/hooks/useIsMounted";
 import { useAppSelector } from "@/store";
 
 interface HeaderProps {
@@ -32,6 +33,7 @@ export default function Header({
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearch = useDebounce(searchTerm, 400);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const isMounted = useIsMounted();
 
   const favoritesCount = useAppSelector((state) => state.favorites.items.length);
   const userName = useAppSelector((state) => state.preferences.userName);
@@ -151,7 +153,7 @@ export default function Header({
           className="relative hidden sm:flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200/80 bg-white text-slate-600 shadow-sm hover:bg-slate-50 hover:text-rose-500 transition dark:border-slate-800/80 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-rose-400 active:scale-95"
         >
           <Heart className="h-4 w-4" />
-          {favoritesCount > 0 && (
+          {isMounted && favoritesCount > 0 && (
             <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white shadow-sm">
               {favoritesCount}
             </span>
@@ -170,11 +172,11 @@ export default function Header({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80"
-              alt={userName}
+              alt={isMounted ? userName : "User"}
               className="h-7 w-7 rounded-xl object-cover ring-1 ring-indigo-500/30"
             />
             <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 hidden sm:inline">
-              {userName}
+              {isMounted ? userName : "Vamshi"}
             </span>
           </button>
 
@@ -183,7 +185,7 @@ export default function Header({
             <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-800 dark:bg-slate-900 z-50">
               <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800 mb-1">
                 <p className="text-xs font-bold text-slate-900 dark:text-white">
-                  {userName}
+                  {isMounted ? userName : "Vamshi"}
                 </p>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400">
                   SDE Intern • Frontend
@@ -196,7 +198,7 @@ export default function Header({
                 className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition"
               >
                 <Heart className="h-3.5 w-3.5 text-rose-500" />
-                <span>Favorites ({favoritesCount})</span>
+                <span>Favorites ({isMounted ? favoritesCount : 0})</span>
               </Link>
 
               <Link
