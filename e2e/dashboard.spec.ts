@@ -82,7 +82,7 @@ test.describe("Personalized Content Dashboard E2E", () => {
     await page.goto("/");
     await expect(page.locator("h1")).toContainText("Vamshi");
     await expect(page.getByText("Trending Right Now")).toBeVisible();
-    await expect(page.getByText("Personalized Feed")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Personalized Feed" })).toBeVisible();
   });
 
   // 2. Changing Preferences
@@ -107,12 +107,12 @@ test.describe("Personalized Content Dashboard E2E", () => {
     page,
   }) => {
     await page.goto("/search");
-    const searchInput = page.getByRole("searchbox");
+    const searchInput = page.getByRole("searchbox", { name: "Search query" });
     await searchInput.fill("Quantum");
 
     // Wait for debounced search result
     await expect(
-      page.getByText("Quantum Breakthrough In Ambient Processors")
+      page.getByText("Quantum Breakthrough In Ambient Processors").first()
     ).toBeVisible();
   });
 
@@ -121,6 +121,7 @@ test.describe("Personalized Content Dashboard E2E", () => {
     page,
   }) => {
     await page.goto("/");
+    await expect(page.getByText("Quantum Breakthrough In Ambient Processors").first()).toBeVisible();
     const favButton = page.locator('button[aria-label="Add to favorites"]').first();
     await favButton.click();
 
@@ -135,8 +136,12 @@ test.describe("Personalized Content Dashboard E2E", () => {
     page,
   }) => {
     await page.goto("/");
+    await expect(page.getByText("Quantum Breakthrough In Ambient Processors").first()).toBeVisible();
     const favButton = page.locator('button[aria-label="Add to favorites"]').first();
     await favButton.click();
+    await expect(
+      page.locator('button[aria-label="Remove from favorites"]').first()
+    ).toBeVisible();
 
     await page.goto("/favorites");
     await expect(page.locator("h1")).toContainText("Your Favorites");
@@ -148,7 +153,8 @@ test.describe("Personalized Content Dashboard E2E", () => {
   test("6. displays drag-and-drop handles for feed cards", async ({ page }) => {
     await page.goto("/feed");
     await expect(page.locator("h1")).toContainText("Personalized Feed");
-    const dragHandles = page.locator('div[title="Drag to reorder"]');
+    await expect(page.getByText("Quantum Breakthrough In Ambient Processors").first()).toBeVisible();
+    const dragHandles = page.locator('div[aria-label="Drag to reorder card"]');
     await expect(dragHandles.first()).toBeVisible();
   });
 
@@ -158,19 +164,29 @@ test.describe("Personalized Content Dashboard E2E", () => {
   }) => {
     await page.goto("/");
     const themeBtn = page.getByTestId("theme-toggle");
+    await expect(themeBtn).toBeVisible();
+
+    // Check initial state
+    const initialIsDark = await page.evaluate(() =>
+      document.documentElement.classList.contains("dark")
+    );
 
     // Toggle theme
     await themeBtn.click();
-    // Verify class changed on document element
-    const isDark = await page.evaluate(() =>
+    await page.waitForTimeout(300);
+
+    const isDarkAfterFirstClick = await page.evaluate(() =>
       document.documentElement.classList.contains("dark")
     );
+    expect(isDarkAfterFirstClick).toBe(!initialIsDark);
 
     // Toggle back
     await themeBtn.click();
-    const isDarkAfter = await page.evaluate(() =>
+    await page.waitForTimeout(300);
+
+    const isDarkAfterSecondClick = await page.evaluate(() =>
       document.documentElement.classList.contains("dark")
     );
-    expect(isDark).not.toBe(isDarkAfter);
+    expect(isDarkAfterSecondClick).toBe(initialIsDark);
   });
 });
